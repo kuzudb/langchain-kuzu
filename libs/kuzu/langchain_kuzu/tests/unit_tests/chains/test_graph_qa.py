@@ -1,13 +1,8 @@
 import os
-import pathlib
 import sys
-from csv import DictReader
 from typing import Any, Dict, List
-from unittest.mock import MagicMock, patch
 
 import pytest
-from langchain.memory import ConversationBufferMemory, ReadOnlySharedMemory
-from langchain_core.language_models.llms import LLM
 from langchain_core.prompts import PromptTemplate
 
 sys.path.append(os.path.abspath("./libs/kuzu"))
@@ -49,6 +44,7 @@ class FakeGraphStore(GraphStore):
     ) -> None:
         """Take GraphDocument as input as uses it to construct a graph."""
         pass
+
 
 def test_cypher_generation_failure() -> None:
     """Test the chain doesn't fail if the Cypher query fails to be generated."""
@@ -128,7 +124,7 @@ def test_kuzu_generation_prompt_structure():
     assert isinstance(KUZU_GENERATION_PROMPT, PromptTemplate)
     required_variables = {"schema", "question"}
     assert set(KUZU_GENERATION_PROMPT.input_variables) == required_variables
-    
+
     # Test prompt contains key instruction elements
     template = KUZU_GENERATION_PROMPT.template.lower()
     assert "cypher" in template
@@ -141,7 +137,7 @@ def test_cypher_qa_prompt_structure():
     assert isinstance(CYPHER_QA_PROMPT, PromptTemplate)
     required_variables = {"context", "question"}
     assert set(CYPHER_QA_PROMPT.input_variables) == required_variables
-    
+
     # Test prompt contains key instruction elements
     template = CYPHER_QA_PROMPT.template.lower()
     assert "context" in template
@@ -151,10 +147,10 @@ def test_cypher_qa_prompt_structure():
 def test_llm_arg_combinations() -> None:
     # No llm
     with pytest.raises(ValueError) as exc_info:
-        KuzuQAChain.from_llm(
-            graph=FakeGraphStore(), allow_dangerous_requests=True
-        )
-    assert "Either `llm` or `cypher_llm` parameters must be provided" == str(exc_info.value)
+        KuzuQAChain.from_llm(graph=FakeGraphStore(), allow_dangerous_requests=True)
+    assert "Either `llm` or `cypher_llm` parameters must be provided" == str(
+        exc_info.value
+    )
     # llm only
     KuzuQAChain.from_llm(
         llm=FakeLLM(), graph=FakeGraphStore(), allow_dangerous_requests=True
@@ -164,9 +160,8 @@ def test_llm_arg_combinations() -> None:
         KuzuQAChain.from_llm(
             qa_llm=FakeLLM(), graph=FakeGraphStore(), allow_dangerous_requests=True
         )
-    assert (
-        "Either `llm` or `cypher_llm` parameters must be provided"
-        == str(exc_info.value)
+    assert "Either `llm` or `cypher_llm` parameters must be provided" == str(
+        exc_info.value
     )
     # cypher_llm only
     with pytest.raises(ValueError) as exc_info:

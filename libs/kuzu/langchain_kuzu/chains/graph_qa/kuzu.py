@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-import os
 import re
-import sys
 from typing import Any, Dict, List, Optional
 
 from langchain.chains.base import Chain
@@ -14,7 +12,6 @@ from langchain_core.language_models import BaseLanguageModel
 from langchain_core.prompts import BasePromptTemplate
 from pydantic import Field
 
-sys.path.append(os.path.abspath("./libs/kuzu"))
 from langchain_kuzu.chains.graph_qa.prompts import (
     CYPHER_QA_PROMPT,
     KUZU_GENERATION_PROMPT,
