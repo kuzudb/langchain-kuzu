@@ -12,11 +12,11 @@ on:
       working-directory:
         required: true
         type: string
-        default: 'libs/{lib}'
+        default: 'libs/kuzu'
 
 env:
-  PYTHON_VERSION: "3.11"
-  POETRY_VERSION: "1.7.1"
+  PYTHON_VERSION: "3.12"
+  POETRY_VERSION: "1.8.5"
 
 jobs:
   build:
