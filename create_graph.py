@@ -1,7 +1,7 @@
-from typing import List, Dict, Any
 import os
 import shutil
 import sys
+from typing import Any, Dict, List
 
 import kuzu
 from dotenv import load_dotenv

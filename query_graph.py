@@ -4,13 +4,18 @@ import sys
 import kuzu
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
+
 sys.path.append(os.path.abspath("./libs/kuzu"))
-from langchain_kuzu.graphs.kuzu_graph import KuzuGraph
 from langchain_kuzu.chains.graph_qa.kuzu import KuzuQAChain
+from langchain_kuzu.graphs.kuzu_graph import KuzuGraph
+
 
 def create_qa_chain(graph, seed=42):
     generation_llm = ChatOpenAI(
-        temperature=0.3, model="gpt-4", api_key=os.environ.get("OPENAI_API_KEY"), seed=seed
+        temperature=0.3,
+        model="gpt-4",
+        api_key=os.environ.get("OPENAI_API_KEY"),
+        seed=seed,
     )
     return KuzuQAChain.from_llm(
         llm=generation_llm,

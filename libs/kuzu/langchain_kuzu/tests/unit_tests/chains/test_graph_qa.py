@@ -1,4 +1,6 @@
+import os
 import pathlib
+import sys
 from csv import DictReader
 from typing import Any, Dict, List
 from unittest.mock import MagicMock, patch
@@ -8,16 +10,15 @@ from langchain.memory import ConversationBufferMemory, ReadOnlySharedMemory
 from langchain_core.language_models.llms import LLM
 from langchain_core.prompts import PromptTemplate
 
-import sys, os
 sys.path.append(os.path.abspath("./libs/kuzu"))
 from langchain_kuzu.chains.graph_qa.kuzu import (
     KuzuQAChain,
-    remove_prefix,
     extract_cypher,
+    remove_prefix,
 )
 from langchain_kuzu.chains.graph_qa.prompts import (
-    KUZU_GENERATION_PROMPT,
     CYPHER_QA_PROMPT,
+    KUZU_GENERATION_PROMPT,
 )
 from langchain_kuzu.graphs.graph_document import GraphDocument
 from langchain_kuzu.graphs.graph_store import GraphStore

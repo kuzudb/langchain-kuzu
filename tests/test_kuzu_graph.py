@@ -1,8 +1,9 @@
-import pytest
-from unittest.mock import Mock, patch
-from langchain_kuzu.graphs.kuzu_graph import KuzuGraph
-from langchain_kuzu.graphs.graph_document import GraphDocument, Node, Relationship
 from typing import Generator
+from unittest.mock import Mock, patch
+
+import pytest
+from langchain_kuzu.graphs.graph_document import GraphDocument, Node, Relationship
+from langchain_kuzu.graphs.kuzu_graph import KuzuGraph
 
 
 @pytest.fixture
