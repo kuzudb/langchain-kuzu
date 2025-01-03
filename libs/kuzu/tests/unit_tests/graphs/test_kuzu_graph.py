@@ -57,17 +57,19 @@ def mock_kuzu_connection() -> Generator[Mock, None, None]:
 @pytest.fixture
 def kuzu_graph(mock_kuzu_connection: Mock) -> KuzuGraph:
     db = Mock()
+
     # Create a concrete subclass that implements the abstract method
     class ConcreteKuzuGraph(KuzuGraph):
         @property
         def get_structured_schema(self) -> dict:
             return {}
-    
+
     return ConcreteKuzuGraph(db, allow_dangerous_requests=True)
 
 
 def test_init_without_dangerous_requests() -> None:
     db = Mock()
+
     # Create concrete subclass for testing
     class ConcreteKuzuGraph(KuzuGraph):
         @property
