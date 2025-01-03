@@ -1,4 +1,4 @@
-from typing import Any, Generator
+from typing import Any, Generator, Optional
 from unittest.mock import Mock, patch
 
 import pytest
@@ -8,7 +8,7 @@ from langchain_kuzu.graphs.kuzu_graph import KuzuGraph
 
 
 class MockCursor:
-    def __init__(self, results: list | None = None) -> None:
+    def __init__(self, results: Optional[list[Any]] = None) -> None:
         self.results = results or []
         self.current_index: int = 0
         self.column_names: list[str] = ["column1"]  # default
