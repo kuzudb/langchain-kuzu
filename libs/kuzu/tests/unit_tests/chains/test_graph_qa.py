@@ -14,7 +14,7 @@ from langchain_kuzu.chains.graph_qa.prompts import (
 )
 from langchain_kuzu.graphs.graph_document import GraphDocument
 from langchain_kuzu.graphs.graph_store import GraphStore
-from langchain_kuzu.tests.llms.fake_llm import FakeLLM
+from tests.llms.fake_llm import FakeLLM
 
 
 class FakeGraphStore(GraphStore):
