@@ -110,7 +110,7 @@ def test_add_graph_documents_with_source(kuzu_graph: KuzuGraph) -> None:
     source_doc = Document(page_content="Test content", metadata={})
     doc = GraphDocument(nodes=[node1], relationships=[], source=source_doc)
 
-    kuzu_graph.add_graph_documents([doc], [], include_source=True)
+    kuzu_graph.add_graph_documents([doc], include_source=True)
 
     # Verify Chunk table and MENTIONS relationship were created
     expected_queries = [
@@ -134,7 +134,7 @@ def test_add_graph_documents_with_existing_source_id(kuzu_graph: KuzuGraph) -> N
     source_doc = Document(page_content="Test content", metadata={"id": "existing_id"})
     doc = GraphDocument(nodes=[node1], relationships=[], source=source_doc)
 
-    kuzu_graph.add_graph_documents([doc], [], include_source=True)
+    kuzu_graph.add_graph_documents([doc], include_source=True)
 
     # Verify the existing ID was used
     assert any(

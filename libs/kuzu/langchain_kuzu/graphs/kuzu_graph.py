@@ -1,5 +1,5 @@
 from hashlib import md5
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List
 
 from langchain_kuzu.graphs.graph_document import GraphDocument, Relationship
 from langchain_kuzu.graphs.graph_store import GraphStore
@@ -151,7 +151,6 @@ class KuzuGraph(GraphStore):
     def add_graph_documents(
         self,
         graph_documents: List[GraphDocument],
-        allowed_relationships: List[Tuple[str, str, str]],
         include_source: bool = False,
     ) -> None:
         """

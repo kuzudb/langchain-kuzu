@@ -30,14 +30,6 @@ text = "Tim Cook is the CEO of Apple. Apple has its headquarters in California."
 First define the LLM to use for graph extraction, and the schema for the graph.
 
 ```py
-# Define the LLM to use for graph extraction
-extraction_llm = ChatOpenAI(
-    temperature=0,
-    model_name="gpt-4o-mini",
-    api_key=OPENAI_API_KEY,
-    seed=SEED,
-)
-
 # Define schema
 allowed_nodes = ["Person", "Company", "Location"]
 allowed_relationships = [
@@ -83,7 +75,6 @@ graph = KuzuGraph(db, allow_dangerous_requests=True)
 # Add the graph document to the graph
 graph.add_graph_documents(
     graph_documents,
-    allowed_relationships=allowed_relationships,
     include_source=True,
 )
 ```
@@ -103,7 +94,7 @@ graph = KuzuGraph(db, allow_dangerous_requests=True)
 
 # Create the KuzuQAChain with verbosity enabled to see the generated Cypher queries
 chain = KuzuQAChain.from_llm(
-    llm=ChatOpenAI(model="gpt-4", temperature=0.3, api_key=OPENAI_API_KEY),
+    llm=ChatOpenAI(model="gpt-4o-mini", temperature=0.3, api_key=OPENAI_API_KEY),
     graph=graph,
     verbose=True,
     allow_dangerous_requests=True,

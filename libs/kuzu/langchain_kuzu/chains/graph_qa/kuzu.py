@@ -171,6 +171,7 @@ class KuzuQAChain(Chain):
         callbacks = _run_manager.get_child()
         question = inputs[self.input_key]
 
+        self.graph.refresh_schema()
         generated_cypher = self.cypher_generation_chain.run(
             {"question": question, "schema": self.graph.get_schema}, callbacks=callbacks
         )
