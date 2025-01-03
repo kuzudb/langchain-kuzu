@@ -52,6 +52,9 @@ class KuzuGraph:
     def query(self, query: str, params: dict = {}) -> List[Dict[str, Any]]:
         """Query Kùzu database"""
         result = self.conn.execute(query, params)
+        # Handle both single QueryResult and list of QueryResults
+        if isinstance(result, list):
+            result = result[0]  # Take first result if multiple
         column_names = result.get_column_names()
         return_list = []
         while result.has_next():
@@ -96,6 +99,9 @@ class KuzuGraph:
             query_result = self.conn.execute(
                 f"CALL table_info('{table_name}') RETURN *;"
             )
+            # Handle both single QueryResult and list of QueryResults
+            if isinstance(query_result, list):
+                query_result = query_result[0]
             while query_result.has_next():
                 row = query_result.get_next()
                 prop_name = row[1]

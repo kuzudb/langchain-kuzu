@@ -15,10 +15,10 @@ class FakeLLM(LLM):
     response_index: int = 0
 
     @field_validator("queries")
-    def check_queries_required(
-        cls, queries: Optional[Mapping], values: Mapping[str, Any]
-    ) -> Optional[Mapping]:
-        if values.get("sequential_response") and not queries:
+    @classmethod
+    def check_queries_required(cls, queries: Optional[Mapping]) -> Optional[Mapping]:
+        """Validate that queries is provided when sequential_responses is True."""
+        if cls.sequential_responses and not queries:
             raise ValueError(
                 "queries is required when sequential_response is set to True"
             )

@@ -1,11 +1,8 @@
-import os
-import sys
 from typing import Any, Dict, List
 
 import pytest
 from langchain_core.prompts import PromptTemplate
 
-sys.path.append(os.path.abspath("./libs/kuzu"))
 from langchain_kuzu.chains.graph_qa.kuzu import (
     KuzuQAChain,
     extract_cypher,
@@ -60,7 +57,7 @@ def test_cypher_generation_failure() -> None:
         qa_prompt=qa_prompt,
         cypher_prompt=cypher_prompt,
     )
-    response = chain.invoke("")
+    response = chain.invoke({"query": ""})
     assert response["result"] == "foo"
 
 
@@ -80,7 +77,7 @@ def test_graph_cypher_qa_chain_prompt_selection_4() -> None:
     assert chain.cypher_generation_chain.prompt == cypher_prompt
 
 
-def test_remove_prefix():
+def test_remove_prefix() -> None:
     # Test with matching prefix
     assert remove_prefix("cypherMATCH (n)", "cypher") == "MATCH (n)"
     # Test with no prefix
@@ -102,8 +99,8 @@ def test_no_backticks() -> None:
 
 def test_backticks() -> None:
     """Test if there are backticks. Query from within backticks should be returned."""
-    query = "You can use the following query: ```MATCH (n) RETURN n```"
-    output = extract_cypher(query)
+    query: str = "You can use the following query: ```MATCH (n) RETURN n```"
+    output: str = extract_cypher(query)
     assert output == "MATCH (n) RETURN n"
 
 
@@ -119,7 +116,7 @@ def test_allow_dangerous_requests_err() -> None:
     ) in str(exc_info.value)
 
 
-def test_kuzu_generation_prompt_structure():
+def test_kuzu_generation_prompt_structure() -> None:
     """Test KUZU_GENERATION_PROMPT has correct structure and variables."""
     assert isinstance(KUZU_GENERATION_PROMPT, PromptTemplate)
     required_variables = {"schema", "question"}
@@ -132,7 +129,7 @@ def test_kuzu_generation_prompt_structure():
     assert "question" in template
 
 
-def test_cypher_qa_prompt_structure():
+def test_cypher_qa_prompt_structure() -> None:
     """Test CYPHER_QA_PROMPT has correct structure and variables."""
     assert isinstance(CYPHER_QA_PROMPT, PromptTemplate)
     required_variables = {"context", "question"}
