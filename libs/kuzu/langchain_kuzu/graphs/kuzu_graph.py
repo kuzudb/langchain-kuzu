@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Tuple
 from langchain_kuzu.graphs.graph_document import GraphDocument, Relationship
 from langchain_kuzu.graphs.graph_store import GraphStore
 
+
 class KuzuGraph(GraphStore):
     """Kùzu wrapper for graph operations.
 
