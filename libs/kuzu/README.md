@@ -18,7 +18,7 @@ an example of how to use the `KuzuGraph` and `KuzuQAChain` classes to create a g
 Let's install some additional dependencies:
 
 ```bash
-pip install -U kuzu langchain langchain-openai langchain-experimental
+pip install -U langchain-openai langchain-experimental
 ```
 
 ### Creating a graph
@@ -147,12 +147,16 @@ import kuzu
 
 db = kuzu.Database("test_db")
 conn = kuzu.Connection(db)
+
+# Create a new relationship table
+conn.execute("CREATE REL TABLE IS_COO_OF(FROM Person TO Company)")
+
 # Add a new person-company relationship for Jeff Williams, the COO of Apple
 conn.execute("CREATE (p:Person {id: 'Jeff Williams'})")
 conn.execute(
     """
-    MATCH (c:Company {id: 'Apple'})
-    CREATE (p:Person {id: 'Jeff Williams'})-[:IS_COO_OF]->(c)
+    MATCH (c:Company {id: 'Apple'}), (p:Person {id: 'Jeff Williams'})
+    CREATE (p)-[:IS_COO_OF]->(c)
     """
 )
 ```
