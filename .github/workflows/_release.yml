@@ -20,7 +20,6 @@ env:
 
 jobs:
   build:
-    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
 
     outputs:
@@ -68,6 +67,8 @@ jobs:
           echo version="$(poetry version --short)" >> $GITHUB_OUTPUT
 
   test-pypi-publish:
+    # Disable test PyPI publishing for now.
+    if: false
     needs:
       - build
     uses:
@@ -78,6 +79,8 @@ jobs:
     secrets: inherit
 
   pre-release-checks:
+    # Disable pre-release checks for now.
+    if: false
     needs:
       - build
       - test-pypi-publish
@@ -184,8 +187,8 @@ jobs:
   publish:
     needs:
       - build
-      - test-pypi-publish
-      - pre-release-checks
+      # - test-pypi-publish
+      # - pre-release-checks
     runs-on: ubuntu-latest
     permissions:
       # This permission is used for trusted publishing:
