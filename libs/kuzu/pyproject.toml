@@ -1,15 +1,15 @@
 [tool.poetry]
 name = "langchain-kuzu"
-version = "0.1.0"
+version = "0.2.0"
 description = "An integration package connecting Kùzu, an embedded graph database, and LangChain"
 authors = ["prrao87", "mewim"]
 readme = "README.md"
-repository = "https://github.com/langchain-ai/langchain-kuzu"
+repository = "https://github.com/kuzudb/langchain-kuzu"
 license = "MIT"
 
 [tool.poetry.urls]
-"Source Code" = "https://github.com/langchain-ai/langchain-kuzu/tree/main/libs/kuzu"
-"Release Notes" = "https://github.com/langchain-ai/langchain-kuzu/releases"
+"Source Code" = "https://github.com/kuzudb/langchain-kuzu/tree/main/libs/kuzu"
+"Release Notes" = "https://github.com/kuzudb/langchain-kuzu/releases"
 
 [tool.poetry.dependencies]
 python = ">=3.9,<4.0"
