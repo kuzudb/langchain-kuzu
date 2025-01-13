@@ -43,7 +43,7 @@ CYPHER_QA_PROMPT = PromptTemplate(
 KUZU_EXTRA_INSTRUCTIONS = """
 Instructions:
 Generate the Kùzu dialect of Cypher with the following rules in mind:
-1. Do not omit the relationship pattern. Always use `()-[]->()` instead of `()->()`.
+1. When matching on a property, use the `LOWER()` function to match the property value.
 2. Do not include triple backticks ``` in your response. Return only Cypher.
 3. Do not return any notes or comments in your response.
 \n"""
