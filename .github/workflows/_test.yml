@@ -39,7 +39,6 @@ jobs:
       - name: Run core tests
         shell: bash
         run: |
-          uv pip install -e .
           make test
 
       - name: Ensure the tests did not create any additional files
