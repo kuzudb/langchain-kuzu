@@ -36,13 +36,10 @@ jobs:
         shell: bash
         run: uv sync --group test --dev
 
-      - name: Install package
-        run: |
-          uv pip install -e .
-
       - name: Run core tests
         shell: bash
         run: |
+          uv pip install -e .
           make test
 
       - name: Ensure the tests did not create any additional files
