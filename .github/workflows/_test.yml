@@ -21,8 +21,8 @@ jobs:
     strategy:
       matrix:
         python-version:
-          - "3.9"
           - "3.12"
+          - "3.13"
     name: "make test #${{ matrix.python-version }}"
     steps:
       - uses: actions/checkout@v4
@@ -35,6 +35,11 @@ jobs:
       - name: Install dependencies
         shell: bash
         run: uv sync --group test --dev
+
+      - name: Install package
+        run: |
+          cd libs/kuzu
+          uv pip install -e .
 
       - name: Run core tests
         shell: bash
