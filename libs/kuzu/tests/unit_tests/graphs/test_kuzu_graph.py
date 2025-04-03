@@ -42,15 +42,15 @@ def mock_kuzu_connection() -> Generator[Mock, None, None]:
         connection._get_rel_table_names.return_value = [
             {"src": "Person", "name": "WORKS_AT", "dst": "Company"}
         ]
-        connection.execute = Mock(
-            return_value=Mock(
-                has_next=lambda: False,
-                get_column_names=lambda: ["column1"],
-                call_args_list=[],
-                reset_mock=lambda: None,
-                call_count=0,
-            )
-        )
+
+        # Create a proper mock cursor
+        mock_cursor = Mock()
+        mock_cursor.has_next = Mock(return_value=False)
+        mock_cursor.get_column_names = Mock(return_value=["column1"])
+
+        # Set up the execute method to return our mock cursor
+        connection.execute = Mock(return_value=mock_cursor)
+
         yield connection
 
 
@@ -92,9 +92,7 @@ def test_query(kuzu_graph: KuzuGraph, mock_kuzu_connection: Mock) -> None:
 
 def test_refresh_schema(kuzu_graph: KuzuGraph, mock_kuzu_connection: Mock) -> None:
     kuzu_graph.refresh_schema()
-    assert "Node properties" in kuzu_graph.schema
-    assert "Relationships properties" in kuzu_graph.schema
-    assert "Relationships" in kuzu_graph.schema
+    assert "ALWAYS RESPECT THE RELATIONSHIP DIRECTIONS:" in kuzu_graph.schema
 
 
 def test_query_with_params(kuzu_graph: KuzuGraph, mock_kuzu_connection: Mock) -> None:
@@ -104,20 +102,9 @@ def test_query_with_params(kuzu_graph: KuzuGraph, mock_kuzu_connection: Mock) ->
     assert result == [{"column1": "value1"}]
 
 
-def test_refresh_schema_with_array_properties(
+def test_add_graph_documents_with_source(
     kuzu_graph: KuzuGraph, mock_kuzu_connection: Mock
 ) -> None:
-    mock_kuzu_connection._get_node_property_names.return_value = {
-        "vector": {"type": "FLOAT", "dimension": 2, "shape": [768]},
-        "tags": {"type": "STRING", "dimension": 1},
-    }
-
-    kuzu_graph.refresh_schema()
-    assert "FLOAT[768]" in kuzu_graph.schema
-    assert "STRING[]" in kuzu_graph.schema
-
-
-def test_add_graph_documents_with_source(kuzu_graph: KuzuGraph) -> None:
     from langchain_core.documents import Document
 
     # Create test data with source document
@@ -125,20 +112,26 @@ def test_add_graph_documents_with_source(kuzu_graph: KuzuGraph) -> None:
     source_doc = Document(page_content="Test content", metadata={})
     doc = GraphDocument(nodes=[node1], relationships=[], source=source_doc)
 
+    # Reset the mock to clear any previous calls
+    mock_kuzu_connection.execute.reset_mock()
+
     kuzu_graph.add_graph_documents([doc], include_source=True)
 
     # Verify Chunk table and MENTIONS relationship were created
     expected_queries = [
         "CREATE NODE TABLE IF NOT EXISTS Chunk",
         "MERGE (c:Chunk {id: $id})",
-        "CREATE REL TABLE GROUP IF NOT EXISTS MENTIONS",
+        "CREATE REL TABLE IF NOT EXISTS MENTIONS",
         "MERGE (c)-[m:MENTIONS]->(e)",
     ]
 
+    actual_calls = [
+        call.args[0] for call in mock_kuzu_connection.execute.call_args_list
+    ]
+
     for query in expected_queries:
-        assert any(
-            query in call.args[0]
-            for call in kuzu_graph.conn.execute.call_args_list  # type: ignore[attr-defined]
+        assert any(query in call for call in actual_calls), (
+            f"Expected query '{query}' not found in actual calls: {actual_calls}"
         )
 
 

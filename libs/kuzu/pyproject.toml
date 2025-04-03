@@ -2,8 +2,6 @@
 name = "langchain-kuzu"
 version = "0.4.0"
 description = "An integration package connecting Kùzu, an embedded graph database, and LangChain"
-authors = ["mewim", "prrao87"]
-license = { text = "MIT" }
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
