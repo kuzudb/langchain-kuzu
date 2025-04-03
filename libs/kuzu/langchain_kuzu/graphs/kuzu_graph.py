@@ -71,21 +71,21 @@ class KuzuGraph(GraphStore):
         # Get table names
         tables_result = self.conn.execute("CALL SHOW_TABLES() RETURN *;")
         tables = []
-        while tables_result.has_next():
-            data = tables_result.get_next()
+        while tables_result.has_next():  # type: ignore
+            data = tables_result.get_next()  # type: ignore
             tables.append(data)
 
         nodes = [table[1] for table in tables if table[2] == "NODE"]
         relationships = [table[1] for table in tables if table[2] == "REL"]
 
         # Collect schema information for nodes and relationships
-        schema = {"nodes": [], "relationships": []}
+        schema: dict[str, list[dict]] = {"nodes": [], "relationships": []}
 
         for node in nodes:
             node_schema = {"label": node, "properties": []}
             node_properties = self.conn.execute(f"CALL TABLE_INFO('{node}') RETURN *;")
-            while node_properties.has_next():
-                row = node_properties.get_next()
+            while node_properties.has_next():  # type: ignore
+                row = node_properties.get_next()  # type: ignore
                 node_schema["properties"].append({"name": row[1], "type": row[2]})
             schema["nodes"].append(node_schema)
 
@@ -96,8 +96,8 @@ class KuzuGraph(GraphStore):
             rel_properties = self.conn.execute(
                 f"CALL SHOW_CONNECTION('{rel}') RETURN *;"
             )
-            while rel_properties.has_next():
-                row = rel_properties.get_next()
+            while rel_properties.has_next():  # type: ignore
+                row = rel_properties.get_next()  # type: ignore
                 edge["src"] = row[0]
                 edge["dst"] = row[1]
                 edge["properties"].append({"name": row[1], "type": row[2]})
