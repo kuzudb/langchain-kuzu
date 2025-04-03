@@ -38,7 +38,6 @@ jobs:
 
       - name: Install package
         run: |
-          cd libs/kuzu
           uv pip install -e .
 
       - name: Run core tests
