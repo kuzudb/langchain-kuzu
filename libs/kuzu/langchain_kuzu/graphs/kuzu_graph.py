@@ -93,16 +93,17 @@ class KuzuGraph(GraphStore):
             edge = dict()
             edge["label"] = rel
             edge["properties"] = []
-            rel_properties = self.conn.execute(f"CALL SHOW_CONNECTION('{rel}') RETURN *;")
+            rel_properties = self.conn.execute(
+                f"CALL SHOW_CONNECTION('{rel}') RETURN *;"
+            )
             while rel_properties.has_next():
                 row = rel_properties.get_next()
-                edge['src'] = row[0]
-                edge['dst'] = row[1]
+                edge["src"] = row[0]
+                edge["dst"] = row[1]
                 edge["properties"].append({"name": row[1], "type": row[2]})
             schema["relationships"].append(edge)
-
         return schema
-    
+
     def refresh_schema(self) -> None:
         schema = self.get_schema_dict()
         lines = []
