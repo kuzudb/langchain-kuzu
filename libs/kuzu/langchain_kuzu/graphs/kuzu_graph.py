@@ -6,7 +6,7 @@ from langchain_kuzu.graphs.graph_store import GraphStore
 
 
 class KuzuGraph(GraphStore):
-    """Kùzu wrapper for graph operations.
+    """Kuzu wrapper for graph operations.
 
     *Security note*: Make sure that the database connection uses credentials
         that are narrowly-scoped to only include necessary permissions.
@@ -23,7 +23,7 @@ class KuzuGraph(GraphStore):
     def __init__(
         self, db: Any, database: str = "kuzu", allow_dangerous_requests: bool = False
     ) -> None:
-        """Initializes the Kùzu graph database connection."""
+        """Initializes the Kuzu graph database connection."""
 
         if allow_dangerous_requests is not True:
             raise ValueError(
@@ -37,8 +37,8 @@ class KuzuGraph(GraphStore):
             import kuzu
         except ImportError:
             raise ImportError(
-                "Could not import Kùzu python package."
-                "Please install Kùzu with `pip install kuzu`."
+                "Could not import Kuzu python package."
+                "Please install Kuzu with `pip install kuzu`."
             )
         self.db = db
         self.conn = kuzu.Connection(self.db)
@@ -47,11 +47,11 @@ class KuzuGraph(GraphStore):
 
     @property
     def get_schema(self) -> str:
-        """Returns the schema of the Kùzu database"""
+        """Returns the schema of the Kuzu database"""
         return self.schema
 
     def query(self, query: str, params: dict = {}) -> List[Dict[str, Any]]:
-        """Query Kùzu database"""
+        """Query Kuzu database"""
         result = self.conn.execute(query, params)
         # Handle both single QueryResult and list of QueryResults
         if isinstance(result, list):
@@ -63,58 +63,74 @@ class KuzuGraph(GraphStore):
             return_list.append(dict(zip(column_names, row)))
         return return_list
 
+    def get_schema_dict(self) -> dict[str, list[dict]]:
+        """
+        Return the schema of the Kuzu database as a dictionary.
+        Includes nodes, relationships, and their associated properties.
+        """
+        # Get table names
+        tables_result = self.conn.execute("CALL SHOW_TABLES() RETURN *;")
+        tables = []
+        while tables_result.has_next():  # type: ignore
+            data = tables_result.get_next()  # type: ignore
+            tables.append(data)
+
+        nodes = [table[1] for table in tables if table[2] == "NODE"]
+        relationships = [table[1] for table in tables if table[2] == "REL"]
+
+        # Collect schema information for nodes and relationships
+        schema: dict[str, list[dict]] = {"nodes": [], "relationships": []}
+
+        for node in nodes:
+            node_schema = {"label": node, "properties": []}
+            node_properties = self.conn.execute(f"CALL TABLE_INFO('{node}') RETURN *;")
+            while node_properties.has_next():  # type: ignore
+                row = node_properties.get_next()  # type: ignore
+                node_schema["properties"].append({"name": row[1], "type": row[2]})
+            schema["nodes"].append(node_schema)
+
+        for rel in relationships:
+            edge = dict()
+            edge["label"] = rel
+            edge["properties"] = []
+            rel_properties = self.conn.execute(
+                f"CALL SHOW_CONNECTION('{rel}') RETURN *;"
+            )
+            while rel_properties.has_next():  # type: ignore
+                row = rel_properties.get_next()  # type: ignore
+                edge["src"] = row[0]
+                edge["dst"] = row[1]
+                edge["properties"].append({"name": row[1], "type": row[2]})
+            schema["relationships"].append(edge)
+        return schema
+
     def refresh_schema(self) -> None:
-        """Refreshes the Kùzu graph schema information"""
-        node_properties = []
-        node_table_names = self.conn._get_node_table_names()
-        for table_name in node_table_names:
-            current_table_schema = {"properties": [], "label": table_name}
-            properties = self.conn._get_node_property_names(table_name)
-            for property_name in properties:
-                property_type = properties[property_name]["type"]
-                list_type_flag = ""
-                if properties[property_name]["dimension"] > 0:
-                    if "shape" in properties[property_name]:
-                        for s in properties[property_name]["shape"]:
-                            list_type_flag += f"[{s}]"
-                    else:
-                        for i in range(properties[property_name]["dimension"]):
-                            list_type_flag += "[]"
-                property_type += list_type_flag
-                current_table_schema["properties"].append(
-                    (property_name, property_type)
-                )
-            node_properties.append(current_table_schema)
+        schema = self.get_schema_dict()
+        lines = []
 
-        relationships = []
-        rel_tables = self.conn._get_rel_table_names()
-        for table in rel_tables:
-            relationships.append(
-                f"(:{table['src']})-[:{table['name']}]->(:{table['dst']})"
-            )
+        # ALWAYS RESPECT THE RELATIONSHIP DIRECTIONS section
+        lines.append("ALWAYS RESPECT THE RELATIONSHIP DIRECTIONS:\n---")
+        for edge in schema.get("relationships", []):
+            lines.append(f"(:{edge['src']}) -[:{edge['label']}]-> (:{edge['dst']})")
+        lines.append("---")
 
-        rel_properties = []
-        for table in rel_tables:
-            table_name = table["name"]
-            current_table_schema = {"properties": [], "label": table_name}
-            query_result = self.conn.execute(
-                f"CALL table_info('{table_name}') RETURN *;"
-            )
-            # Handle both single QueryResult and list of QueryResults
-            if isinstance(query_result, list):
-                query_result = query_result[0]
-            while query_result.has_next():
-                row = query_result.get_next()
-                prop_name = row[1]
-                prop_type = row[2]
-                current_table_schema["properties"].append((prop_name, prop_type))
-            rel_properties.append(current_table_schema)
+        # NODES section
+        lines.append("\nNode properties:")
+        for node in schema.get("nodes", []):
+            lines.append(f"  - {node['label']}")
+            for prop in node.get("properties", []):
+                ptype = prop["type"].lower()
+                lines.append(f"    - {prop['name']}: {ptype}")
 
-        self.schema = (
-            f"Node properties: {node_properties}\n"
-            f"Relationships properties: {rel_properties}\n"
-            f"Relationships: {relationships}\n"
-        )
+        # EDGES section (only include relationships with properties)
+        lines.append("\nRelationship properties:")
+        for edge in schema.get("relationships", []):
+            if edge.get("properties"):
+                lines.append(f"- {edge['label']}")
+                for prop in edge.get("properties", []):
+                    ptype = prop["type"].lower()
+                    lines.append(f"    - {prop['name']}: {ptype}")
+        self.schema = "\n".join(lines)
 
     def _create_chunk_node_table(self) -> None:
         self.conn.execute(
@@ -155,7 +171,7 @@ class KuzuGraph(GraphStore):
     ) -> None:
         """
         Adds a list of `GraphDocument` objects that represent nodes and relationships
-        in a graph to a Kùzu backend.
+        in a graph to a Kuzu backend.
 
         Parameters:
           - graph_documents (List[GraphDocument]): A list of `GraphDocument` objects
@@ -166,7 +182,7 @@ class KuzuGraph(GraphStore):
           - allowed_relationships (List[Tuple[str, str, str]]): A list of allowed
             relationships that exist in the graph. Each tuple contains three elements:
             the source node type, the relationship type, and the target node type.
-            Required for Kùzu, as the names of the relationship tables that need to
+            Required for Kuzu, as the names of the relationship tables that need to
             pre-exist are derived from these tuples.
 
           - include_source (bool): If True, stores the source document
@@ -220,7 +236,7 @@ class KuzuGraph(GraphStore):
                     # If include_source is True, we need to create a relationship table
                     # between the chunk nodes and the entity nodes
                     self._create_chunk_node_table()
-                    ddl = "CREATE REL TABLE GROUP IF NOT EXISTS MENTIONS ("
+                    ddl = "CREATE REL TABLE IF NOT EXISTS MENTIONS ("
                     table_names = []
                     for node_label in node_labels:
                         table_names.append(f"FROM Chunk TO {node_label}")
