@@ -34,11 +34,12 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
         shell: bash
-        run: uv sync --group test --dev
+        run: uv sync --group test --dev --project libs/kuzu
 
       - name: Run core tests
         shell: bash
         run: |
+          cd libs/kuzu
           uv pip install -e .
           make test
 
