@@ -145,29 +145,22 @@ def test_llm_arg_combinations() -> None:
     # No llm
     with pytest.raises(ValueError) as exc_info:
         KuzuQAChain.from_llm(graph=FakeGraphStore(), allow_dangerous_requests=True)
-    assert "Either `llm` or `cypher_llm` parameters must be provided" == str(
-        exc_info.value
-    )
+    assert "Either `llm` or `cypher_llm` parameters must be provided" == str(exc_info.value)
     # llm only
-    KuzuQAChain.from_llm(
-        llm=FakeLLM(), graph=FakeGraphStore(), allow_dangerous_requests=True
-    )
+    KuzuQAChain.from_llm(llm=FakeLLM(), graph=FakeGraphStore(), allow_dangerous_requests=True)
     # qa_llm only
     with pytest.raises(ValueError) as exc_info:
         KuzuQAChain.from_llm(
             qa_llm=FakeLLM(), graph=FakeGraphStore(), allow_dangerous_requests=True
         )
-    assert "Either `llm` or `cypher_llm` parameters must be provided" == str(
-        exc_info.value
-    )
+    assert "Either `llm` or `cypher_llm` parameters must be provided" == str(exc_info.value)
     # cypher_llm only
     with pytest.raises(ValueError) as exc_info:
         KuzuQAChain.from_llm(
             cypher_llm=FakeLLM(), graph=FakeGraphStore(), allow_dangerous_requests=True
         )
-    assert (
-        "Either `llm` or `qa_llm` parameters must be provided along with `cypher_llm`"
-        == str(exc_info.value)
+    assert "Either `llm` or `qa_llm` parameters must be provided along with `cypher_llm`" == str(
+        exc_info.value
     )
     # llm + qa_llm
     KuzuQAChain.from_llm(

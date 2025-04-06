@@ -137,8 +137,7 @@ class KuzuQAChain(Chain):
             raise ValueError("Either `llm` or `cypher_llm` parameters must be provided")
         if not qa_llm and not llm:
             raise ValueError(
-                "Either `llm` or `qa_llm` parameters must be provided along with"
-                " `cypher_llm`"
+                "Either `llm` or `qa_llm` parameters must be provided along with `cypher_llm`"
             )
         if cypher_llm and qa_llm and llm:
             raise ValueError(
@@ -180,15 +179,11 @@ class KuzuQAChain(Chain):
         generated_cypher = remove_prefix(extract_cypher(generated_cypher), "cypher")
 
         _run_manager.on_text("Generated Cypher:", end="\n", verbose=self.verbose)
-        _run_manager.on_text(
-            generated_cypher, color="green", end="\n", verbose=self.verbose
-        )
+        _run_manager.on_text(generated_cypher, color="green", end="\n", verbose=self.verbose)
         context = self.graph.query(generated_cypher)
 
         _run_manager.on_text("Full Context:", end="\n", verbose=self.verbose)
-        _run_manager.on_text(
-            str(context), color="green", end="\n", verbose=self.verbose
-        )
+        _run_manager.on_text(str(context), color="green", end="\n", verbose=self.verbose)
 
         result = self.qa_chain(
             {"question": question, "context": context},

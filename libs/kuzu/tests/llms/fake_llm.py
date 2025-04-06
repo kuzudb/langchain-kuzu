@@ -19,9 +19,7 @@ class FakeLLM(LLM):
     def check_queries_required(cls, queries: Optional[Mapping]) -> Optional[Mapping]:
         """Validate that queries is provided when sequential_responses is True."""
         if cls.sequential_responses and not queries:
-            raise ValueError(
-                "queries is required when sequential_response is set to True"
-            )
+            raise ValueError("queries is required when sequential_response is set to True")
         return queries
 
     def get_num_tokens(self, text: str) -> int:

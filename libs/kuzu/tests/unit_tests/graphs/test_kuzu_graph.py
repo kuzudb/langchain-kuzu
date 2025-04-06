@@ -81,9 +81,7 @@ def test_init_without_dangerous_requests() -> None:
 
 
 def test_query(kuzu_graph: KuzuGraph, mock_kuzu_connection: Mock) -> None:
-    mock_kuzu_connection.execute.return_value = MockCursor(
-        results=[["Rhea Seacrest", 33]]
-    )
+    mock_kuzu_connection.execute.return_value = MockCursor(results=[["Rhea Seacrest", 33]])
     mock_kuzu_connection.execute.return_value.column_names = ["name", "age"]
 
     result = kuzu_graph.query("MATCH (p:Person) RETURN p.name, p.age")
@@ -102,9 +100,7 @@ def test_query_with_params(kuzu_graph: KuzuGraph, mock_kuzu_connection: Mock) ->
     assert result == [{"column1": "value1"}]
 
 
-def test_add_graph_documents_with_source(
-    kuzu_graph: KuzuGraph, mock_kuzu_connection: Mock
-) -> None:
+def test_add_graph_documents_with_source(kuzu_graph: KuzuGraph, mock_kuzu_connection: Mock) -> None:
     from langchain_core.documents import Document
 
     # Create test data with source document
@@ -125,14 +121,12 @@ def test_add_graph_documents_with_source(
         "MERGE (c)-[m:MENTIONS]->(e)",
     ]
 
-    actual_calls = [
-        call.args[0] for call in mock_kuzu_connection.execute.call_args_list
-    ]
+    actual_calls = [call.args[0] for call in mock_kuzu_connection.execute.call_args_list]
 
     for query in expected_queries:
-        assert any(
-            query in call for call in actual_calls
-        ), f"Expected query '{query}' not found in actual calls: {actual_calls}"
+        assert any(query in call for call in actual_calls), (
+            f"Expected query '{query}' not found in actual calls: {actual_calls}"
+        )
 
 
 def test_add_graph_documents_with_existing_source_id(kuzu_graph: KuzuGraph) -> None:

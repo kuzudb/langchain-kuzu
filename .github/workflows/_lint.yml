@@ -36,7 +36,7 @@ jobs:
       - name: Install dependencies
         working-directory: ${{ inputs.working-directory }}
         run: |
-          uv sync --group test
+          uv sync --group test --project libs/kuzu
 
       - name: Analysing the code with our lint
         working-directory: ${{ inputs.working-directory }}

@@ -37,8 +37,7 @@ class KuzuGraph(GraphStore):
             import kuzu
         except ImportError:
             raise ImportError(
-                "Could not import Kuzu python package."
-                "Please install Kuzu with `pip install kuzu`."
+                "Could not import Kuzu python package.Please install Kuzu with `pip install kuzu`."
             )
         self.db = db
         self.conn = kuzu.Connection(self.db)
@@ -60,7 +59,7 @@ class KuzuGraph(GraphStore):
         return_list = []
         while result.has_next():
             row = result.get_next()
-            return_list.append(dict(zip(column_names, row)))
+            return_list.append(dict(zip(column_names, row, strict=False)))
         return return_list
 
     def get_schema_dict(self) -> dict[str, list[dict]]:
@@ -93,9 +92,7 @@ class KuzuGraph(GraphStore):
             edge = dict()
             edge["label"] = rel
             edge["properties"] = []
-            rel_properties = self.conn.execute(
-                f"CALL SHOW_CONNECTION('{rel}') RETURN *;"
-            )
+            rel_properties = self.conn.execute(f"CALL SHOW_CONNECTION('{rel}') RETURN *;")
             while rel_properties.has_next():  # type: ignore
                 row = rel_properties.get_next()  # type: ignore
                 edge["src"] = row[0]
@@ -193,9 +190,7 @@ class KuzuGraph(GraphStore):
             for merging process. Defaults to False.
         """
         # Get unique node labels in the graph documents
-        node_labels = list(
-            {node.type for document in graph_documents for node in document.nodes}
-        )
+        node_labels = list({node.type for document in graph_documents for node in document.nodes})
 
         for document in graph_documents:
             # Add chunk nodes and create source document relationships if include_source
