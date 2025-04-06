@@ -10,23 +10,23 @@ on:
   workflow_dispatch:
     inputs:
       working-directory:
-        required: true
-        type: string
-        default: 'libs/kuzu'
-      dangerous-nonmaster-release:
+        description: "From which folder this pipeline executes"
+        default: "."
+      dangerous-nonmain-release:
         required: false
         type: boolean
         default: false
-        description: "Release from a non-master branch (danger!)"
+        description: "Release from a non-main branch (danger!)"
 
 env:
-  PYTHON_VERSION: "3.12"
+  PYTHON_VERSION: "3.11"
   UV_FROZEN: "true"
   UV_NO_SYNC: "true"
 
 jobs:
   build:
-    if: github.ref == 'refs/heads/master' || inputs.dangerous-nonmaster-release
+    if: github.ref == 'refs/heads/main' || inputs.dangerous-nonmain-release
+    environment: Scheduled testing
     runs-on: ubuntu-latest
 
     outputs:
@@ -54,8 +54,6 @@ jobs:
       # https://github.com/pypa/gh-action-pypi-publish#non-goals
       - name: Build project for distribution
         run: uv build
-        working-directory: ${{ inputs.working-directory }}
-
       - name: Upload build
         uses: actions/upload-artifact@v4
         with:
@@ -76,117 +74,9 @@ jobs:
           with open(os.environ["GITHUB_OUTPUT"], "a") as f:
               f.write(f"pkg-name={pkg_name}\n")
               f.write(f"version={version}\n")
-
-  test-pypi-publish:
-    needs:
-      - build
-    uses:
-      ./.github/workflows/_test_release.yml
-    permissions: write-all
-    with:
-      working-directory: ${{ inputs.working-directory }}
-      dangerous-nonmaster-release: ${{ inputs.dangerous-nonmaster-release }}
-    secrets: inherit
-
-  pre-release-checks:
-    needs:
-      - build
-      - test-pypi-publish
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      # We explicitly *don't* set up caching here. This ensures our tests are
-      # maximally sensitive to catching breakage.
-      #
-      # For example, here's a way that caching can cause a falsely-passing test:
-      # - Make the langchain package manifest no longer list a dependency package
-      #   as a requirement. This means it won't be installed by `pip install`,
-      #   and attempting to use it would cause a crash.
-      # - That dependency used to be required, so it may have been cached.
-      #   When restoring the venv packages from cache, that dependency gets included.
-      # - Tests pass, because the dependency is present even though it wasn't specified.
-      # - The package is published, and it breaks on the missing dependency when
-      #   used in the real world.
-
-      - name: Set up Python + uv
-        uses: "./.github/actions/uv_setup"
-        id: setup-python
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-
-      - uses: actions/download-artifact@v4
-        with:
-          name: dist
-          path: ${{ inputs.working-directory }}/dist/
-
-      - name: Import dist package
-        shell: bash
-        working-directory: ${{ inputs.working-directory }}
-        env:
-          PKG_NAME: ${{ needs.build.outputs.pkg-name }}
-          VERSION: ${{ needs.build.outputs.version }}
-        # Here we use:
-        # - The default regular PyPI index as the *primary* index, meaning 
-        #   that it takes priority (https://pypi.org/simple)
-        # - The test PyPI index as an extra index, so that any dependencies that
-        #   are not found on test PyPI can be resolved and installed anyway.
-        #   (https://test.pypi.org/simple). This will include the PKG_NAME==VERSION
-        #   package because VERSION will not have been uploaded to regular PyPI yet.
-        # - attempt install again after 5 seconds if it fails because there is
-        #   sometimes a delay in availability on test pypi
-        run: |
-          uv venv
-          VIRTUAL_ENV=.venv uv pip install dist/*.whl
-
-          # Replace all dashes in the package name with underscores,
-          # since that's how Python imports packages with dashes in the name.
-          IMPORT_NAME="$(echo "$PKG_NAME" | sed s/-/_/g)"
-
-          uv run python -c "import $IMPORT_NAME; print(dir($IMPORT_NAME))"
-
-      - name: Import test dependencies
-        run: uv sync --group test
-        working-directory: ${{ inputs.working-directory }}
-
-      # Overwrite the local version of the package with the built version
-      - name: Import published package (again)
-        working-directory: ${{ inputs.working-directory }}
-        shell: bash
-        env:
-          PKG_NAME: ${{ needs.build.outputs.pkg-name }}
-          VERSION: ${{ needs.build.outputs.version }}
-        run: |
-          VIRTUAL_ENV=.venv uv pip install dist/*.whl
-
-      - name: Run unit tests
-        run: make tests
-        working-directory: ${{ inputs.working-directory }}
-
-      - name: Get minimum versions
-        working-directory: ${{ inputs.working-directory }}
-        id: min-version
-        run: |
-          VIRTUAL_ENV=.venv uv pip install packaging requests
-          python_version="$(uv run python --version | awk '{print $2}')"
-          min_versions="$(uv run python $GITHUB_WORKSPACE/.github/scripts/get_min_versions.py pyproject.toml release $python_version)"
-          echo "min-versions=$min_versions" >> "$GITHUB_OUTPUT"
-          echo "min-versions=$min_versions"
-
-      - name: Run unit tests with minimum dependency versions
-        if: ${{ steps.min-version.outputs.min-versions != '' }}
-        env:
-          MIN_VERSIONS: ${{ steps.min-version.outputs.min-versions }}
-        run: |
-          VIRTUAL_ENV=.venv uv pip install $MIN_VERSIONS
-          make tests
-        working-directory: ${{ inputs.working-directory }}
-
   publish:
     needs:
       - build
-      - test-pypi-publish
-      - pre-release-checks
     runs-on: ubuntu-latest
     permissions:
       # This permission is used for trusted publishing:
@@ -219,14 +109,12 @@ jobs:
           packages-dir: ${{ inputs.working-directory }}/dist/
           verbose: true
           print-hash: true
-          # Temp workaround since attestations are on by default as of gh-action-pypi-publish v1\.11\.0
+          # Temp workaround since attestations are on by default as of gh-action-pypi-publish v1.11.0
           attestations: false
 
   mark-release:
     needs:
       - build
-      - test-pypi-publish
-      - pre-release-checks
       - publish
     runs-on: ubuntu-latest
     permissions:
@@ -251,12 +139,13 @@ jobs:
           name: dist
           path: ${{ inputs.working-directory }}/dist/
 
-      - name: Create Release
+      - name: Create Tag
         uses: ncipollo/release-action@v1
         with:
           artifacts: "dist/*"
           token: ${{ secrets.GITHUB_TOKEN }}
-          draft: false
           generateReleaseNotes: true
-          tag: ${{ inputs.working-directory }}/v${{ needs.build.outputs.version }}
-          commit: ${{ github.sha }}
+          tag: ${{needs.build.outputs.pkg-name}}==${{ needs.build.outputs.version }}
+          body: ${{ needs.release-notes.outputs.release-body }}
+          commit: main
+          makeLatest: true

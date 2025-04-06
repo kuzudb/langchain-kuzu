@@ -1,9 +1,9 @@
 [project]
 name = "langchain-kuzu"
-version = "0.4.0"
+version = "0.4.1"
 description = "An integration package connecting Kùzu, an embedded graph database, and LangChain"
 readme = "README.md"
-requires-python = "<3.14,>=3.9"
+requires-python = ">=3.10,<4.0"
 dependencies = [
     "kuzu>=0.9.0",
     "langchain>=0.3.22",
@@ -15,6 +15,10 @@ dependencies = [
 "Release Notes" = "https://github.com/kuzudb/langchain-kuzu/releases"
 repository = "https://github.com/kuzudb/langchain-kuzu"
 
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
 [dependency-groups]
 test = [
     "pytest>=8.0.0",
@@ -23,30 +27,35 @@ test = [
     "pytest-socket>=0.7.0",
     "types-setuptools>=69.0.0",
 ]
-codespell = ["codespell<3.0.0,>=2.2.0"]
-test_integration = ["langchain-openai<0.4,>=0.3.6"]
-lint = ["ruff<1.0,>=0.5"]
-dev = ["langchain-core"]
-typing = ["mypy<2.0,>=1.10", "simsimd<6.0.0,>=5.0.0"]
-
-[tool.mypy]
-disallow_untyped_defs = "True"
-
-[tool.ruff]
-target-version = "py313"
-
-[tool.ruff.lint]
-select = ["E", "F", "I", "T201", "NPY201"]
-ignore = ["E501"]
-
-[tool.coverage.run]
-omit = ["tests/*"]
 
 [tool.pytest.ini_options]
-addopts = "--snapshot-warn-unused --strict-markers --strict-config --durations=5"
-markers = [
-    "requires: mark tests as requiring a specific library",
-    "compile: mark placeholder test used to compile integration tests without running them",
+minversion = "8.0"
+addopts = "-ra -q -v"
+testpaths = [
+    "tests",
 ]
-asyncio_mode = "auto"
-asyncio_default_fixture_loop_scope = "function"
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = [
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # pyflakes
+    "I",  # isort
+    "B",  # flake8-bugbear
+]
+ignore = [
+  "E501" # line-length
+]
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+check_untyped_defs = true
