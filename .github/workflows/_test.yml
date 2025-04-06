@@ -39,4 +39,5 @@ jobs:
       - name: Run core tests
         shell: bash
         run: |
+          cd libs/kuzu
           make test
