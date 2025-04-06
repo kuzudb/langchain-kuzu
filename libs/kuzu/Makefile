@@ -11,13 +11,13 @@ TEST_FILE ?= tests/unit_tests/
 # integration_test integration_tests: TEST_FILE = tests/integration_tests/
 
 test tests:
-	uv run --active --group test pytest --disable-socket --allow-unix-socket $(TEST_FILE)
+	uv run pytest --disable-socket --allow-unix-socket $(TEST_FILE)
 
 # integration_test integration_tests:
 # 	uv run --group test --group test_integration pytest $(TEST_FILE)
 
 test_watch:
-	uv run --active --group test ptw --snapshot-update --now . -- -vv $(TEST_FILE)
+	uv run ptw . -- $(TEST_FILE)
 
 
 ######################
@@ -43,13 +43,13 @@ format format_diff:
 	[ "$(PYTHON_FILES)" = "" ] || uv run --all-groups ruff check --select I --fix $(PYTHON_FILES)
 
 spell_check:
-	uv run --active --all-groups codespell --toml pyproject.toml
+	uv run --all-groups codespell --toml pyproject.toml
 
 spell_fix:
-	uv run --active --all-groups codespell --toml pyproject.toml -w
+	uv run --all-groups codespell --toml pyproject.toml -w
 
 check_imports: $(shell find langchain_kuzu -name '*.py')
-	uv run --active --all-groups python ./scripts/check_imports.py $^
+	uv run --all-groups python ./scripts/check_imports.py $^
 
 ######################
 # HELP

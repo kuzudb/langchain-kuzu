@@ -7,6 +7,10 @@ on:
         required: true
         type: string
         description: "From which folder this pipeline executes"
+      python-version:
+        required: true
+        type: string
+        description: "Python version to use"
 
 env:
   UV_FROZEN: "true"
@@ -34,13 +38,11 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
         shell: bash
-        run: uv sync --group test --dev --project libs/kuzu
+        run: uv sync --group test
 
       - name: Run core tests
         shell: bash
         run: |
-          cd libs/kuzu
-          uv pip install -e .
           make test
 
       - name: Ensure the tests did not create any additional files
