@@ -1,20 +1,17 @@
-.PHONY: all format lint test tests integration_tests docker_tests help extended_tests
+.PHONY: all lint format test help
 
 # Default target executed when no arguments are given to make.
 all: help
 
-.EXPORT_ALL_VARIABLES:
-UV_FROZEN = true
+######################
+# TESTING AND COVERAGE
+######################
 
 # Define a variable for the test file path.
-TEST_FILE ?= tests/unit_tests/
-# integration_test integration_tests: TEST_FILE = tests/integration_tests/
+TEST_FILE ?= tests/
 
-test tests:
+test:
 	uv run pytest --disable-socket --allow-unix-socket $(TEST_FILE)
-
-# integration_test integration_tests:
-# 	uv run --group test --group test_integration pytest $(TEST_FILE)
 
 test_watch:
 	uv run ptw . -- $(TEST_FILE)
@@ -25,41 +22,30 @@ test_watch:
 ######################
 
 # Define a variable for Python and notebook files.
-PYTHON_FILES=.
-MYPY_CACHE=.mypy_cache
 lint format: PYTHON_FILES=.
-lint_diff format_diff: PYTHON_FILES=$(shell git diff --relative=libs/partners/kuzu --name-only --diff-filter=d master | grep -E '\.py$$|\.ipynb$$')
-lint_package: PYTHON_FILES=langchain_kuzu
-lint_tests: PYTHON_FILES=tests
-lint_tests: MYPY_CACHE=.mypy_cache_test
+lint_diff format_diff: PYTHON_FILES=$(shell git diff --relative=. --name-only --diff-filter=d master | grep -E '\.py$$|\.ipynb$$')
 
-lint lint_diff lint_package lint_tests:
-	[ "$(PYTHON_FILES)" = "" ] || uv run --all-groups ruff check $(PYTHON_FILES)
-	[ "$(PYTHON_FILES)" = "" ] || uv run --all-groups ruff format $(PYTHON_FILES) --diff
-	[ "$(PYTHON_FILES)" = "" ] || mkdir -p $(MYPY_CACHE) && uv run mypy $(PYTHON_FILES) --cache-dir $(MYPY_CACHE)
+lint lint_diff:
+	[ "$(PYTHON_FILES)" = "" ] ||	uv run ruff format $(PYTHON_FILES) --diff
+	[ "$(PYTHON_FILES)" = "" ] ||	uv run ruff check $(PYTHON_FILES) --diff
+	# [ "$(PYTHON_FILES)" = "" ] || uv run mypy $(PYTHON_FILES)
 
 format format_diff:
-	[ "$(PYTHON_FILES)" = "" ] || uv run --all-groups ruff format $(PYTHON_FILES)
-	[ "$(PYTHON_FILES)" = "" ] || uv run --all-groups ruff check --select I --fix $(PYTHON_FILES)
+	[ "$(PYTHON_FILES)" = "" ] || uv run ruff check --fix $(PYTHON_FILES)
+	[ "$(PYTHON_FILES)" = "" ] || uv run ruff format $(PYTHON_FILES)
 
-spell_check:
-	uv run --all-groups codespell --toml pyproject.toml
-
-spell_fix:
-	uv run --all-groups codespell --toml pyproject.toml -w
-
-check_imports: $(shell find langchain_kuzu -name '*.py')
-	uv run --all-groups python ./scripts/check_imports.py $^
+	
 
 ######################
 # HELP
 ######################
 
 help:
-	@echo '----'
-	@echo 'check_imports				- check imports'
+	@echo '===================='
+	@echo '-- LINTING --'
 	@echo 'format                       - run code formatters'
 	@echo 'lint                         - run linters'
+	@echo '-- TESTS --'
 	@echo 'test                         - run unit tests'
-	@echo 'tests                        - run unit tests'
 	@echo 'test TEST_FILE=<test_file>   - run all tests in file'
+	@echo '-- DOCUMENTATION tasks are from the top-level Makefile --'

@@ -130,9 +130,9 @@ def test_add_graph_documents_with_source(
     ]
 
     for query in expected_queries:
-        assert any(query in call for call in actual_calls), (
-            f"Expected query '{query}' not found in actual calls: {actual_calls}"
-        )
+        assert any(
+            query in call for call in actual_calls
+        ), f"Expected query '{query}' not found in actual calls: {actual_calls}"
 
 
 def test_add_graph_documents_with_existing_source_id(kuzu_graph: KuzuGraph) -> None:
