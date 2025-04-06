@@ -1,6 +1,6 @@
 [project]
 name = "langchain-kuzu"
-version = "0.4.1"
+version = "0.4.2"
 description = "An integration package connecting Kùzu, an embedded graph database, and LangChain"
 readme = "README.md"
 requires-python = ">=3.10,<4.0"
