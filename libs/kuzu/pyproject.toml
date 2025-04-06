@@ -17,13 +17,11 @@ repository = "https://github.com/kuzudb/langchain-kuzu"
 
 [dependency-groups]
 test = [
-    "pytest<9,>=8",
-    "freezegun<2.0.0,>=1.2.2",
-    "pytest-mock<4.0.0,>=3.10.0",
-    "syrupy<5.0.0,>=4.0.2",
-    "pytest-watcher<1.0.0,>=0.3.4",
-    "pytest-asyncio<1,>=0.25.0",
-    "pytest-socket<1.0.0,>=0.7.0",
+    "pytest>=8.0.0",
+    "ruff>=0.9.4",
+    "mypy>=1.8.0",
+    "pytest-socket>=0.7.0",
+    "types-setuptools>=69.0.0",
 ]
 codespell = ["codespell<3.0.0,>=2.2.0"]
 test_integration = ["langchain-openai<0.4,>=0.3.6"]
